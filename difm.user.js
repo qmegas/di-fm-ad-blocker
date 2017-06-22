@@ -6,36 +6,36 @@
 // @include    http://*.di.fm/*
 // @copyright  Megas (qmegas.info)
 // @grant	   none
-// 
+//
 // ==/UserScript==
 
 (function(){
-	var $bar, $volume, muted = false;
-	
+	var $bar, $title, $volume, muted = false;
+
 	function init() {
 		if (!initVars()) {
-			setTimeout(init, 1000);
+			setTimeout(init, 250);
 		}
 	}
-	
+
 	function initVars(){
 		$bar = $('#webplayer-region .progress');
-		if ($bar.length == 0) {
+        $title = $('#webplayer-region .track-title');
+		if (!$bar.length) {
 			return false;
 		}
-		
+
 		$volume = $('#webplayer-region .settings-region a.ico.volume');
 		setInterval(checkState, 1000);
-	
+
 		return true;
 	}
-	
+
 	function checkState() {
-		var isAnimated = ($bar.find('.bar.animated').length > 0);
-		//console.log('Is animated: ', isAnimated);
-		//console.log('Is muted: ', muted);
-		
-		if (isAnimated) {
+		var isAdv = ($bar.find('.bar.animated').length || $title.find('.sponsor').length);
+		 // console.log('State: isAdv ' + isAdv + ', isMuted ' + muted);
+
+		if (isAdv) {
 			if (!muted) {
 				$volume.click();
 				//console.log('Click');
@@ -49,7 +49,7 @@
 			}
 		}
 	}
-	
+
 	$(function(){
 		init();
 	});
