@@ -26,6 +26,10 @@
 		isMuted() { return !!this.muted; }
 		mute() {}
 		unmute() {}
+
+		// Needed to close timeout button, etc
+		getPeriodicalCheckTimeout() { return false; }
+		periodicalCheck() {}
 	}
 
 	var players = window.$advSilencers = [
@@ -35,14 +39,14 @@
 			class Player extends AbstractPlayer {
 
 				isApplicable() {
-					return !!$('#webplayer-region .progress')[0];
+					return !!$('#webplayer-region .progress-region')[0];
 				}
 
 				initialize() {
 					if (this.isApplicable()) {
 						var container = $('#webplayer-region');
 
-						this.bar = container.find('.progress');
+						this.bar = container.find('.progress-region');
 						this.title = container.find('.track-title');
 						this.volume = container.find('a.ico.volume');
 					}
@@ -53,22 +57,48 @@
 
 					return !!this.bar.find('.bar.animated').length ||
 						this.title.find('.sponsor').length ||
-						this.title.text().toLowerCase() == 'di.fm'
+						this.title.text().toLowerCase().trim() == 'di.fm' ||
+                        this.title.text().toLowerCase().trim() == 'sponsored message'
 						;
 				}
 
+                isMuted() {
+					return !!this.volume.hasClass('icon-mute');
+				}
+
 				mute() {
-					if (!this.muted) {
+					if (!this.isMuted()) {
 						this.volume.click();
 						this.muted = true;
 					}
 				}
 
 				unmute() {
-					if (this.muted) {
+					if (this.isMuted()) {
 						this.volume.click();
 						this.muted = false;
 
+					}
+				}
+
+				getPeriodicalCheckTimeout() {
+					return 1000;
+				}
+
+				periodicalCheck() {
+					if (this.isMuted()) {
+						return false;
+					}
+
+					var modalStillThere;
+					$('.modal-content').each(function() {
+						if ($(this).find('h1.title')) {
+							modalStillThere = $(this);
+						}
+					});
+					if (modalStillThere) {
+						console.log('Periodical check: Modal "still there" is found, closing...');
+						modalStillThere.find('button.close').click();
 					}
 				}
 			}
@@ -152,8 +182,8 @@
 
 		var muted = player.isMuted();
 		setInterval(function() {
-			// console.log('State: isAdv ' + player.isAdv() + ', isMuted ' + player.isMuted());
-			
+			console.log('State: isAdv ' + player.isAdv() + ', isMuted ' + player.isMuted());
+
 			if (player.isAdv()) {
 				if (!muted) {
 					player.mute();
@@ -163,10 +193,14 @@
 			else {
 				if (muted) {
 					player.unmute();
-					muted = !player.isMuted();
+					muted = player.isMuted();
 				}
 			}
 		}, config.checkInterval);
+
+		if (player.getPeriodicalCheckTimeout) {
+			setInterval(player.periodicalCheck.bind(player), player.getPeriodicalCheckTimeout);
+		}
 
 		return true;
 	}
