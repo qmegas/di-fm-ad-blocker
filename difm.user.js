@@ -1,56 +1,43 @@
 // ==UserScript==
 // @name       Di.fm Ad silencer
 // @namespace  http://qmegas.info/difm
-// @version    2.0
+// @version    3.1
 // @description  Silence ads on di.fm radio
-// @include    http://*.di.fm/*
+// @include    https://*.di.fm/*
 // @copyright  Megas (qmegas.info)
 // @grant	   none
-// 
+//
 // ==/UserScript==
 
-(function(){
-	var $bar, $volume, muted = false;
-	
-	function init() {
-		if (!initVars()) {
-			setTimeout(init, 1000);
-		}
-	}
-	
-	function initVars(){
-		$bar = $('#webplayer-region .progress');
-		if ($bar.length == 0) {
+(() => {
+	const initVars = () => {
+		if (!di || !di.app || !di.app.vent) {
 			return false;
 		}
-		
-		$volume = $('#webplayer-region .settings-region a.ico.volume');
-		setInterval(checkState, 1000);
-	
+		di.app.vent.on("webplayer:ad:begin", () => {
+            const muting = () => {
+                if (!di.app.request("webplayer:muted")) {
+                    console.log('Ad silencer - muting try');
+                    di.app.commands.execute("webplayer:mute");
+                    setTimeout(muting, 300);
+                }
+            };
+            muting();
+        });
+		di.app.vent.on("webplayer:ad:end", () => {
+            console.log('Ad silencer - unmuting');
+            di.app.commands.execute("webplayer:unmute");
+        });
+		setInterval(() => di.app.vent.trigger("user:active"), 6e4);
+        console.log('Ad silencer - init');
 		return true;
-	}
-	
-	function checkState() {
-		var isAnimated = ($bar.find('.bar.animated').length > 0);
-		//console.log('Is animated: ', isAnimated);
-		//console.log('Is muted: ', muted);
-		
-		if (isAnimated) {
-			if (!muted) {
-				$volume.click();
-				//console.log('Click');
-				muted = true;
-			}
-		} else {
-			if (muted) {
-				$volume.click();
-				//console.log('Click');
-				muted = false;
-			}
+	};
+
+	const init = () => {
+		if (!initVars()) {
+			setTimeout(init, 1e3);
 		}
-	}
-	
-	$(function(){
-		init();
-	});
+	};
+
+	$(init());
 })();
