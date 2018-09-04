@@ -1,9 +1,13 @@
 // ==UserScript==
 // @name       Di.fm Ad silencer
 // @namespace  http://qmegas.info/difm
-// @version    3.1
+// @version    3.2
 // @description  Silence ads on di.fm radio
 // @include    https://*.di.fm/*
+// @include    https://*.classicalradio.com/*
+// @include    https://*.radiotunes.com/*
+// @include    https://*.jazzradio.com/*
+// @include    https://*.rockradio.com/*
 // @copyright  Megas (qmegas.info)
 // @grant	   none
 //
